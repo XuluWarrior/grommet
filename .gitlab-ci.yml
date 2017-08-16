@@ -1,0 +1,27 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  VERSION_ID: '1.6.$CI_PIPELINE_ID'
+
+build:
+  stage: build
+  image: node:7.10.1
+  script:
+   - npm install -g gulp
+   - npm install
+   - gulp dist
+  artifacts:
+    paths:
+    - $CI_PROJECT_DIR/dist/*
+
+pages:
+  image: node:7.10.1
+  stage: deploy
+  script:
+   - mkdir public
+   - tar -czf public/grommet.tgz dist
+  artifacts:
+    paths:
+    - public
