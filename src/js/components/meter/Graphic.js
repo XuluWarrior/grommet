@@ -77,13 +77,16 @@ export default class Graphic extends Component {
 
   _renderSlice (trackIndex, item, itemIndex, startValue, max, track,
     threshold) {
-    const { activeIndex, onActivate } = this.props;
+    const { activeIndex, onActivate, series } = this.props;
     let path;
     if (! item.hidden) {
       const classes = classnames(
         `${CLASS_ROOT}__slice`,
         {
-          [`${CLASS_ROOT}__slice--active`]: (itemIndex === activeIndex),
+          [`${CLASS_ROOT}__slice--active`]:
+            // if we have an active index
+            // then the active item will be the last item
+            (activeIndex >= 0 && itemIndex === series.length - 1),
           [`${CLASS_ROOT}__slice--clickable`]: item.onClick,
           [`${COLOR_INDEX}-${item.colorIndex}`]: item.colorIndex
         }
@@ -108,10 +111,25 @@ export default class Graphic extends Component {
   }
 
   _renderSlices (series, trackIndex, track, threshold) {
-    const { min, max } = this.props;
+    const { min, max, activeIndex } = this.props;
     let startValue = min;
 
-    let paths = series.map((item, itemIndex) => {
+    let activeLastSeries;
+
+    // If we are stacked we need to render slices in reverse order
+    //   so that the shorter bars are on top
+    // But if a value is active then that should be rendered last
+    //   so it has nothing on top.
+    if (threshold || activeIndex === undefined) {
+      activeLastSeries = series.slice().reverse();
+    } else {
+      activeLastSeries = series.slice(0, activeIndex)
+        .concat(series.slice(activeIndex+1));
+      activeLastSeries.unshift(series[activeIndex]);
+      activeLastSeries.reverse();
+    }
+
+    let paths = activeLastSeries.map((item, itemIndex) => {
       let path = this._renderSlice(trackIndex, item, itemIndex, startValue,
         max, track, threshold);
 
