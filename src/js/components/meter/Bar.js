@@ -56,7 +56,7 @@ export default class Bar extends Graphic {
 
   _sliceCommands (trackIndex, item, startValue) {
     const value = item.value - this.props.min;
-    const start = this._translateBarWidth(startValue);
+    const start  = this.props.stacked ? 0 : this._translateBarWidth(startValue);
     const distance = this._translateBarWidth(value);
     // const distance = Math.max((item.value > 0 ? MINIMUM_THICKNESS : 0),
     //   this._translateBarWidth(value));
