@@ -24,8 +24,8 @@ export var propTypes = {
   total: PropTypes.number
 };
 
-export function buildPath (itemIndex, commands, classes, onActivate,
-    onClick, a11yTitle, role) {
+export function buildPath (itemIndex, displayIndex, commands, classes,
+                           onActivate, onClick, a11yTitle, role) {
   if (onActivate) {
     const onOver = onActivate.bind(null, itemIndex);
     const onOut = onActivate.bind(null, undefined);
@@ -37,7 +37,7 @@ export function buildPath (itemIndex, commands, classes, onActivate,
     }
 
     return (
-      <g key={itemIndex} {...a11yRoles}>
+      <g key={displayIndex} id={itemIndex} {...a11yRoles}>
         <path className={classes} d={commands}
           data-index={itemIndex} onFocus={onOver} onBlur={onOut} />
         <path className={`${CLASS_ROOT}__hot`} d={commands} fill="none"
