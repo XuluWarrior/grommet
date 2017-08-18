@@ -75,18 +75,16 @@ export default class Graphic extends Component {
     return "";
   }
 
-  _renderSlice (trackIndex, item, itemIndex, startValue, max, track,
+  _renderSlice (trackIndex, item, displayIndex, startValue, max, track,
     threshold) {
-    const { activeIndex, onActivate, series } = this.props;
+    const { activeIndex, onActivate } = this.props;
+    const itemIndex = item.index >= 0 ? item.index : displayIndex;
     let path;
     if (! item.hidden) {
       const classes = classnames(
         `${CLASS_ROOT}__slice`,
         {
-          [`${CLASS_ROOT}__slice--active`]:
-            // if we have an active index
-            // then the active item will be the last item
-            (activeIndex >= 0 && itemIndex === series.length - 1),
+          [`${CLASS_ROOT}__slice--active`]: activeIndex === itemIndex,
           [`${CLASS_ROOT}__slice--clickable`]: item.onClick,
           [`${COLOR_INDEX}-${item.colorIndex}`]: item.colorIndex
         }
@@ -95,14 +93,14 @@ export default class Graphic extends Component {
       let commands = this._sliceCommands(trackIndex, item, startValue, max);
 
       if (threshold) {
-        path = buildPath(itemIndex, commands, classes);
+        path = buildPath(itemIndex, displayIndex, commands, classes);
       } else if (track) {
-        path = buildPath(itemIndex, commands, classes,
+        path = buildPath(itemIndex, displayIndex, commands, classes,
           onActivate, item.onClick);
       } else {
         const a11yTitle = `${item.value}`;
         const role = this.props.series.length > 1 ? 'img' : undefined;
-        path = buildPath(itemIndex, commands, classes,
+        path = buildPath(itemIndex, displayIndex, commands, classes,
           onActivate, item.onClick, a11yTitle, role);
       }
     }
@@ -114,29 +112,30 @@ export default class Graphic extends Component {
     const { min, max, activeIndex } = this.props;
     let startValue = min;
 
-    let activeLastSeries;
-
     // If we are stacked we need to render slices in reverse order
     //   so that the shorter bars are on top
-    // But if a value is active then that should be rendered last
-    //   so it has nothing on top.
-    if (threshold || activeIndex === undefined) {
-      activeLastSeries = series.slice().reverse();
-    } else {
-      activeLastSeries = series.slice(0, activeIndex)
-        .concat(series.slice(activeIndex+1));
-      activeLastSeries.unshift(series[activeIndex]);
-      activeLastSeries.reverse();
-    }
+    // But first remember the original item order
+    series.forEach((item, index) => {
+      item.index = index;
+    });
 
-    let paths = activeLastSeries.map((item, itemIndex) => {
-      let path = this._renderSlice(trackIndex, item, itemIndex, startValue,
+    const reversedSeries = series.slice().reverse();
+
+    let paths = reversedSeries.map((item, displayIndex) => {
+      let path = this._renderSlice(trackIndex, item, displayIndex, startValue,
         max, track, threshold);
 
       startValue += item.value;
 
       return path;
     });
+
+    if (activeIndex >= 0) {
+      // We can use <use> to render a copy of the active slice
+      //  and hence render it last and on top
+      const useHack = <use xlinkHref={"#"+activeIndex} />;
+      paths.push(useHack);
+    }
 
     return paths;
   }
