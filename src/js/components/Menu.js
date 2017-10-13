@@ -181,6 +181,7 @@ class MenuDrop extends Component {
     let classes = classnames(
       `${CLASS_ROOT}__drop`,
       {
+        [`${this.props.className}__drop`]: this.props.className,
         [`${CLASS_ROOT}__drop--align-right`]: dropAlign.right,
         [`${CLASS_ROOT}__drop--${size}`]: size
       }
@@ -285,8 +286,13 @@ export default class Menu extends Component {
           document.removeEventListener('click', this._checkOnClose);
           document.removeEventListener('touchstart', this._checkOnClose);
           if (this._drop) {
-            this._drop.remove();
-            this._drop = undefined;
+            // When Menu is used with Anchor/paths the Drop removes too quickly
+            // and react looks for a DOM element which is gone. Adding a
+            // slight delay resolves this issue.
+            setTimeout(() => {
+              this._drop.remove();
+              this._drop = undefined;
+            }, 5);
           }
           break;
         case 'focused':
@@ -425,6 +431,7 @@ export default class Menu extends Component {
 
     return (
       <MenuDrop {...boxProps} {...this.context}
+        className={this.props.className}
         dropAlign={this.props.dropAlign}
         size={this.props.size}
         onClick={onClick}

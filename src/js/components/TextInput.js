@@ -125,7 +125,7 @@ export default class TextInput extends Component {
   _onInputChange (event) {
     const { onDOMChange, suggestions } = this.props;
 
-    if (suggestions && suggestions.length) {
+    if (suggestions && Array.isArray(suggestions)) {
       this.setState({
         activeSuggestionIndex: -1, announceChange: true, dropActive: true
       });
@@ -310,6 +310,7 @@ export default class TextInput extends Component {
     return (
       <input
         ref={ref => this.componentRef = ref}
+        type='text'
         autoComplete="off"
         {...props}
         className={classes}

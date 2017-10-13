@@ -35,7 +35,7 @@ class ToastContents extends Component {
 
   componentDidMount () {
     announce(this._contentsRef.innerText);
-    this._timer = setTimeout(this._onClose, DURATION);
+    this._timer = setTimeout(this._onClose, this.props.duration);
   }
 
   componentWillUnmount () {
@@ -49,6 +49,7 @@ class ToastContents extends Component {
     this._timer = undefined;
     this.setState({ closing: true });
     if (onClose) {
+      // wait for the laeve animation to finish
       setTimeout(onClose, ANIMATION_DURATION);
     }
   }
@@ -73,24 +74,32 @@ class ToastContents extends Component {
     let statusIcon;
     if (status) {
       statusIcon = (
-        <Status className={`${CLASS_ROOT}__status`} value={status}
-          size={size === 'large' ? 'medium' : size} />
+        <Status
+          className={`${CLASS_ROOT}__status`}
+          value={status}
+          size={size === 'large' ? 'medium' : size}
+        />
       );
     }
 
     let closeControl;
     if (onClose) {
       closeControl = (
-        <Button className={`${CLASS_ROOT}__closer`}
-          icon={<CloseIcon />} onClick={this._onClose} />
+        <Button
+          className={`${CLASS_ROOT}__closer`}
+          icon={<CloseIcon />}
+          onClick={this._onClose}
+        />
       );
     }
 
     return (
       <div className={classNames} {...rest}>
         {statusIcon}
-        <div ref={(ref) => this._contentsRef = ref}
-          className={`${CLASS_ROOT}__contents`}>
+        <div
+          ref={(ref) => this._contentsRef = ref}
+          className={`${CLASS_ROOT}__contents`}
+        >
           {children}
         </div>
         {closeControl}
@@ -161,20 +170,30 @@ export default class Toast extends Component {
     if (this._element) {
       this._element.className = `${CLASS_ROOT}__container`;
       const contents = (
-        <ToastContents {...this.props}
+        <ToastContents
+          {...this.props}
           history={this.context.history}
           intl={this.context.intl}
           router={this.context.router}
-          store={this.context.store} />
+          store={this.context.store}
+          onClose={() => this._removeLayer()}
+        />
       );
       ReactDOM.render(contents, this._element);
     }
   }
 
   _removeLayer () {
-    ReactDOM.unmountComponentAtNode(this._element);
-    this._element.parentNode.removeChild(this._element);
-    this._element = undefined;
+    const { onClose } = this.props;
+    if (this._element) {
+      ReactDOM.unmountComponentAtNode(this._element);
+      this._element.parentNode.removeChild(this._element);
+      this._element = undefined;
+
+      if (onClose) {
+        onClose();
+      }
+    }
   }
 
   render () {
@@ -184,10 +203,12 @@ export default class Toast extends Component {
 
 Toast.propTypes = {
   onClose: PropTypes.func,
+  duration: PropTypes.number,
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   status: PropTypes.string
 };
 
 Toast.defaultProps = {
+  duration: DURATION,
   size: 'medium'
 };

@@ -197,7 +197,7 @@ export default class Anchor extends Component {
         aria-label={a11yTitle} onClick={(event, ...args) => {
           if (disabled) {
             event.preventDefault();
-          } else {
+          } else if (adjustedOnClick) {
             adjustedOnClick(event, ...args);
           }
         }}>
